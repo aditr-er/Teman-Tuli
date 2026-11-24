@@ -1,0 +1,6 @@
+{
+  "name": "KawanCukur Academy",
+  "description": "Platform AI training teknik cukur rambut visual dan adaptif untuk karyawan barbershop teman tuli",
+  "requestFramePermissions": ["camera"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

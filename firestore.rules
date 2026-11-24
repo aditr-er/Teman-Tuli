@@ -1,0 +1,80 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    // Collection: users/{uid}/progress
+    // Document ID: current
+    // Fields: uid, streak, lastActive, totalSolved, accuracy
+    //
+    // Collection: users/{uid}/history
+    // Document ID: auto-generated
+    // Fields: uid, question, subtest, answer, explanation, timestamp
+    // ===============================================================
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(uid) {
+      return isAuthenticated() && request.auth.uid == uid;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() &&
+        (request.auth.token.email == "adityablaugrana@gmail.com" && request.auth.token.email_verified == true);
+    }
+
+    function isValidProgress(data) {
+      return data.uid == request.auth.uid &&
+             data.streak is number && data.streak >= 0 &&
+             data.totalSolved is number && data.totalSolved >= 0;
+    }
+
+    function isValidHistory(data) {
+      return data.uid == request.auth.uid &&
+             data.question is string && data.question.size() < 5000 &&
+             data.subtest in ['TWK', 'TIU', 'TKP'];
+    }
+
+    function isValidTryout(data) {
+      return data.uid == request.auth.uid &&
+             data.score is number &&
+             data.type in ['tryout', 'drilling'] &&
+             data.totalQuestions is number;
+    }
+
+    function isValidAnalysis(data) {
+      return data.status is string && data.status.size() < 2000 &&
+             data.learningPath is string && data.learningPath.size() < 2000 &&
+             data.recommendedSubtest is string && data.recommendedSubtest.size() < 200 &&
+             data.recommendedTopic is string && data.recommendedTopic.size() < 200 &&
+             data.actionPlanMarkdown is string && data.actionPlanMarkdown.size() < 20000;
+    }
+
+    match /users/{uid} {
+      allow read: if isOwner(uid) || isAdmin();
+
+      match /progress/current {
+        allow read: if isOwner(uid) || isAdmin();
+        allow write: if isOwner(uid) && isValidProgress(request.resource.data);
+      }
+
+      match /history/{questionId} {
+        allow read: if isOwner(uid) || isAdmin();
+        allow write: if isOwner(uid) && isValidHistory(request.resource.data);
+      }
+
+      match /tryouts/{tryoutId} {
+        allow read: if isOwner(uid) || isAdmin();
+        allow write: if isOwner(uid) && isValidTryout(request.resource.data);
+      }
+
+      match /analyses/{analysisId} {
+        allow read: if isOwner(uid) || isAdmin();
+        allow write: if isOwner(uid) && isValidAnalysis(request.resource.data);
+      }
+    }
+  }
+}

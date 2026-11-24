@@ -1,0 +1,62 @@
+{
+  "entities": {
+    "UserProgress": {
+      "title": "User Progress",
+      "description": "Tracks user's learning progress, streaks, and accuracy.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "description": "User ID" },
+        "streak": { "type": "integer", "description": "Current daily streak" },
+        "lastActive": { "type": "string", "format": "date-time", "description": "Last active timestamp" },
+        "totalSolved": { "type": "integer", "description": "Total questions solved" },
+        "accuracy": { "type": "object", "description": "Accuracy per subtest" }
+      },
+      "required": ["uid", "streak", "totalSolved"]
+    },
+    "SolvedQuestion": {
+      "title": "Solved Question",
+      "description": "History of questions solved by the user.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "description": "User ID" },
+        "question": { "type": "string", "description": "Question text" },
+        "subtest": { "type": "string", "enum": ["TWK", "TIU", "TKP"] },
+        "answer": { "type": "string", "description": "AI generated answer" },
+        "explanation": { "type": "string", "description": "AI generated explanation" },
+        "timestamp": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "question", "subtest", "timestamp"]
+    },
+    "TryoutResult": {
+      "title": "Tryout Result",
+      "description": "Results of a tryout session.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "type": { "type": "string", "enum": ["tryout", "drilling"] },
+        "subtest": { "type": "string" },
+        "difficulty": { "type": "string", "enum": ["mudah", "sedang", "sulit"] },
+        "score": { "type": "number" },
+        "totalQuestions": { "type": "number" },
+        "correctAnswers": { "type": "number" },
+        "duration": { "type": "number", "description": "Duration in seconds" },
+        "timestamp": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "score", "timestamp"]
+    }
+  },
+  "firestore": {
+    "/users/{uid}/progress/current": {
+      "schema": "UserProgress",
+      "description": "Current progress for a specific user"
+    },
+    "/users/{uid}/history/{questionId}": {
+      "schema": "SolvedQuestion",
+      "description": "History of solved questions for a specific user"
+    },
+    "/users/{uid}/tryouts/{tryoutId}": {
+      "schema": "TryoutResult",
+      "description": "History of tryout results"
+    }
+  }
+}
